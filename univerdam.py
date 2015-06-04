@@ -90,6 +90,14 @@ def main_univerdam(data, C, lambda_L, lambda_D1, lambda_D2, thr, beta, virtual_l
             # Pour l'instant on passe seulement du '_fr', mais le "if" ici prévoit
             # si on veut essayer d'autres types de classificateur (tel qu'essayé par
             # les auteurs)
-            print("chose affaire") # todo
+            if virtual_label_type[-2:] == "fr":
+                dv_dir = os.path.join(results_directory_name, 'svm_fr', 'decision_values', data.domain_names[s])
+                mmd_dir = os.path.join(results_directory_name, 'mmd_values_fr', data.domain_names[s])
+            elif virtual_label_type[-2:] == "_s":
+                dv_dir = os.path.join(results_directory_name, 'svm_s', 'decision_values', data.domain_names[s])
+                mmd_dir = os.path.join(results_directory_name, 'mmd_values_at', data.domain_names[s])
+            elif virtual_label_type[-2:] == "st":
+                dv_dir = os.path.join(results_directory_name, 'svm_at', 'decision_values', data.domain_names[s])
+                mmd_dir = os.path.join(results_directory_name, 'mmd_values_at',  data.domain_names[s])
 
     return "result"     # todo: this isn't the actual return

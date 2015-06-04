@@ -1,6 +1,7 @@
 __author__ = 'Simon'
 
 import scipy.io as io
+import numpy as np
 import os
 
 NUM_DATA_SETS = 4
@@ -45,3 +46,14 @@ def load_matlab_data():
         data.tar_test_index.append(imported_file['test_ind'])
         data.tar_background_index.append(imported_file['tar_background_ind'])
     return data
+
+
+def calc_kernel_S(kernel_type, kernel_param, S):
+    if kernel_type == "linear":
+        K = S
+    elif kernel_type == "poly":
+        K = np.power((S+1), kernel_param)
+    else:
+        print("error in calc_kernel_S : kernel_type unrecognized!")
+    return K
+

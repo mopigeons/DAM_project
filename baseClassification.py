@@ -46,6 +46,11 @@ def main_svm_fr(data, C, kernel_types, kernel_params):
         y = np.concatenate((data.ytarget[0], ysource))
         src_index = [i + data.Xtarget[0].shape[0] for i in range(Xsource.shape[0])]
         tar_index = [i for i in range(data.Xtarget[0].shape[0])]
-        # passé ici: ligne 26+ du code matlab
 
+        # passé ici: ligne 26+ du code matlab
+        for kt in range(len(kernel_types)):
+            kernel_type = kernel_types[kt]
+            for kp in range(len(kernel_params[kt])):
+                kernel_param = kernel_params[kt][kp]
+                K = calc_
     return "a string of words that marks the end of this function"  # todo: changer le retour

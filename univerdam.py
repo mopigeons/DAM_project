@@ -105,7 +105,7 @@ def main_univerdam(data, C, lambda_L, lambda_D1, lambda_D2, thr, beta, virtual_l
                     kernel_param = kernel_params[kt][kp]
                     dv_file = os.path.join(dv_dir, "dv_round="+str(r)+"_C="+str(C)+"_"+kernel_type+"_"
                                            +str(kernel_param)+".mat")
-
+                    # todo: ligne 49 de main_univerdam.m - il faut implémenter le SVM_fr ici avant de poursuivre
 
 
     return "result"     # todo: this isn't the actual return

@@ -21,7 +21,7 @@ def launch_univerdam(data):
     thr = 0.3
     virtual_label_type = 'svm_fr'
     kernel_types = ['linear', 'poly']
-    kernel_params = [0, []]
+    kernel_params = [[0], []]
     # ajout de valeurs 1.1, 1.2, 1.3, 1.4, 1.5 à kernel_params[1]
     for i in range(5):
         ind = (10.0+float(i)+1)/10.0
@@ -99,5 +99,13 @@ def main_univerdam(data, C, lambda_L, lambda_D1, lambda_D2, thr, beta, virtual_l
             elif virtual_label_type[-2:] == "st":
                 dv_dir = os.path.join(results_directory_name, 'svm_at', 'decision_values', data.domain_names[s])
                 mmd_dir = os.path.join(results_directory_name, 'mmd_values_at',  data.domain_names[s])
+            for kt in range(len(kernel_types)):
+                kernel_type = kernel_types[kt]
+                for kp in range(len(kernel_params[kt])):
+                    kernel_param = kernel_params[kt][kp]
+                    dv_file = os.path.join(dv_dir, "dv_round="+str(r)+"_C="+str(C)+"_"+kernel_type+"_"
+                                           +str(kernel_param)+".mat")
+
+
 
     return "result"     # todo: this isn't the actual return

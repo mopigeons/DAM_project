@@ -52,5 +52,6 @@ def main_svm_fr(data, C, kernel_types, kernel_params):
             for kp in range(len(kernel_params[kt])):
                 kernel_param = kernel_params[kt][kp]
                 K = ut.calc_kernel_S(kernel_type, kernel_param, S)
-                #ligne 31+ du code matlab
+                K[src_index][:, src_index] *= 2
+                K[tar_index][:, tar_index] *= 2
     return "a string of words that marks the end of this function"  # todo: changer le retour

@@ -3,6 +3,7 @@ __author__ = 'Simon'
 from sklearn import svm
 import utility as ut
 import os
+import scipy.io as io
 import numpy as np
 import scipy as sp
 from scipy.sparse import csc_matrix
@@ -54,4 +55,16 @@ def main_svm_fr(data, C, kernel_types, kernel_params):
                 K = ut.calc_kernel_S(kernel_type, kernel_param, S)
                 K[src_index][:, src_index] *= 2
                 K[tar_index][:, tar_index] *= 2
+                for r in range(data.nRound):
+                    tar_train_index = data.tar_train_index[r]
+                    tar_test_index = data.tar_test_index[r]
+                    train_index = np.concatenate((src_index, np.squeeze(tar_train_index)))
+                    dv_file = os.path.join(dv_dir, "dv_round="+r+"_C="+C+"_"+kernel_type+"_"+kernel_param+".mat")
+                    if os.path.exists(dv_file):
+                        decision_values = io.loadmat(dv_file)
+                    #else:
+
+
+
+
     return "a string of words that marks the end of this function"  # todo: changer le retour

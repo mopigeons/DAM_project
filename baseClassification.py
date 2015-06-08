@@ -7,6 +7,7 @@ import scipy.io as io
 import numpy as np
 import scipy as sp
 from scipy.sparse import csc_matrix
+import sklearn.svm.libsvm as ls
 
 def run_svm_fr(data):
     print("***---***---***   svm_fr   ***---***---***")
@@ -59,10 +60,17 @@ def main_svm_fr(data, C, kernel_types, kernel_params):
                     tar_train_index = data.tar_train_index[r]
                     tar_test_index = data.tar_test_index[r]
                     train_index = np.concatenate((src_index, np.squeeze(tar_train_index)))
-                    dv_file = os.path.join(dv_dir, "dv_round="+r+"_C="+C+"_"+kernel_type+"_"+kernel_param+".mat")
+                    dv_file = os.path.join(dv_dir, "dv_round="+str(r)+"_C="+str(C)+"_"+kernel_type+"_"+str(kernel_param)+".mat")
                     if os.path.exists(dv_file):
                         decision_values = io.loadmat(dv_file)
-                    #else:
+                    else:
+                        Ymatrix = np.asarray(np.squeeze(y[train_index]), dtype=float)
+                        Xmatrix = np.ascontiguousarray(np.concatenate((np.asarray([range(len(train_index))]).transpose(),
+                                                      K[train_index][:, train_index]), axis=1))
+                        model = ls.fit(Xmatrix, Ymatrix, C=C)
+                        #model = ls.fit(Xmatrix, Ymatrix)
+                        # todo: line 44 of matlab code (svmpredict)
+
 
 
 

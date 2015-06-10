@@ -6,7 +6,7 @@ import os
 
 NUM_DATA_SETS = 4
 NUM_TAR_IND_FILES = 10
-N_ROUND = 10
+N_ROUND = 1
 
 
 class Data:
@@ -56,4 +56,27 @@ def calc_kernel_S(kernel_type, kernel_param, S):
     else:
         print("error in calc_kernel_S : kernel_type unrecognized!")
     return K
+
+def calc_ap(gt, desc):
+    assert len(gt) == len(desc)
+    gt = np.asarray(gt).flatten()
+    desc = np.asarray(desc).flatten()
+    desc *= -1
+    ind = desc.argsort()
+    dv = desc
+    dv.sort()
+    dv = (-1*dv)
+    gt = gt[ind]
+    pos_ind = np.where(gt > 0) # tuple where first element is the array containing the elements where gt[i] > 0
+    npos = len(pos_ind[0])
+    if npos == 0:
+        ap = 0
+    else:
+        npos_array = np.array(range(npos))+1
+        print("len npos:", len(npos_array))
+        pos_ind_array = np.array(pos_ind).flatten() + 1
+        print("len pos ind: ", len(pos_ind_array))
+        divarray = (npos_array/pos_ind_array)
+        ap = np.average(divarray)
+    return [ap]
 

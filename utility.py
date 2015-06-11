@@ -2,7 +2,9 @@ __author__ = 'Simon'
 
 import scipy.io as io
 import numpy as np
+import scipy as sp
 import os
+from scipy.sparse import csc_matrix
 
 NUM_DATA_SETS = 4
 NUM_TAR_IND_FILES = 10
@@ -82,5 +84,56 @@ def calc_ap(gt, desc):
 def log_print(log_file, varargin):
     with open(log_file, "a") as file:
         file.write(varargin)
+
+
+def save_mmd_fr(data):
+    result_dir = 'results'
+    kernel_types = ['linear', 'poly']
+    kernel_params = [[0], []]
+    # ajout de valeurs 1.1, 1.2, 1.3, 1.4, 1.5 à kernel_params[1]
+    for i in range(5):
+        ind = (10.0+float(i)+1)/10.0
+        kernel_params[1].append(ind)
+    for s in range(len(data.Xsource)):
+        Xsource = data.Xsource[s]
+        ysource = data.ysource[s]
+
+        mmd_dir = os.path.join(result_dir, 'mmd_values_fr', data.domain_names[s])
+        if not (os.path.exists(result_dir)):
+            os.mkdir(result_dir)
+        if not (os.path.exists(os.path.join(result_dir, 'mmd_values_fr'))):
+            os.mkdir(os.path.join(result_dir, 'mmd_values_fr'))
+        if not (os.path.exists(mmd_dir)):
+            os.mkdir(mmd_dir)
+        Xsource = data.Xsource[s]
+        ysource = data.ysource[s]
+        Xsparse = sp.sparse.vstack([data.Xtarget[0], csc_matrix(Xsource)])
+        S = Xsparse*Xsparse.transpose()
+        S = S.todense()
+        y = np.concatenate((data.ytarget[0], ysource))
+        src_index = [i + data.Xtarget[0].shape[0] for i in range(Xsource.shape[0])]
+        tar_index = [i for i in range(data.Xtarget[0].shape[0])]
+        ss = np.zeros((len(src_index)+len(tar_index), 1))
+        ss[src_index] = 1/len(src_index)*100
+        ss[tar_index] = -1/len(tar_index)*100
+
+        for kt in range(len(kernel_types)):
+            kernel_type = kernel_types[kt]
+            for kp in range(len(kernel_params[kt])):
+                kernel_param = kernel_params[kt][kp]
+                K = calc_kernel_S(kernel_type, kernel_param, S)
+                K[src_index][:, src_index] *= 2
+                K[tar_index][:, tar_index] *= 2
+
+                mmd_file = os.path.join(mmd_dir, 'mmd_'+str(kernel_type)+'_'+str(kernel_param)+'.mat')
+                if os.path.exists(mmd_file):
+                    mmd_value = io.loadmat(mmd_file)['mmd_value']
+                else:
+                    mmd_value = (ss.transpose()*K*ss)
+                    io.savemat(mmd_file, {'mmd_value': mmd_value})
+
+
+
+
 
 

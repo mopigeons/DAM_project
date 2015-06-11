@@ -26,7 +26,6 @@ def run_svm_fr(data):
     # parametres
     C = 1
     kernel_types = ["linear", "poly"]
-    kernel_params = [[0]]
     kernel_params = [[0], []]
     # ajout de valeurs 1.1, 1.2, 1.3, 1.4, 1.5 à kernel_params[1]
     for i in range(5):

@@ -4,6 +4,7 @@ from utility import Data
 import os
 import numpy as np
 import scipy as sp
+import scipy.io as io
 from scipy.sparse import csr_matrix
 from scipy.sparse import csc_matrix
 
@@ -105,7 +106,24 @@ def main_univerdam(data, C, lambda_L, lambda_D1, lambda_D2, thr, beta, virtual_l
                     kernel_param = kernel_params[kt][kp]
                     dv_file = os.path.join(dv_dir, "dv_round="+str(r)+"_C="+str(C)+"_"+kernel_type+"_"
                                            +str(kernel_param)+".mat")
-                    # todo: ligne 49 de main_univerdam.m - il faut implémenter le SVM_fr ici avant de poursuivre
+                    if os.path.exists(dv_file):
+                        decision_values = io.loadmat(dv_file)['decision_values']
+                    else:
+                        print('You need to run the required baseline algorithms to obtain the decision values required by algorithm')
+                        return -1
+                    mmd_file = os.path.join(mmd_dir, 'mmd_'+str(kernel_type)+'_'+str(kernel_param)+'.mat')
+                    if os.path.exists(mmd_file):
+                        mmd_value = (io.loadmat(mmd_file))['mmd_value']
+                    else:
+                        print('please run the proper save_mmd first to prepare the mmd values required by this algorithm')
+                        return -1
+                    mmd_values.append(mmd_value)
+                    all_test_dv.append(decision_values)
+        f_s = all_test_dv
+        gamma_s = np.exp((-1*beta)*np.power(np.asarray(mmd_values), 2))
+        gamma_s = np.array(gamma_s)
+        gamma_s = gamma_s/np.sum(gamma_s)
+        print(gamma_s)
 
 
     return "result"     # todo: this isn't the actual return

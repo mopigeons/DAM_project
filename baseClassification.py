@@ -33,8 +33,11 @@ def run_svm_fr(data):
         ind = (10.0+float(i)+1)/10.0
         kernel_params[1].append(ind)
     result = main_svm_fr(data, C, kernel_types, kernel_params)
-    # todo: line 14+ in matlab code
-    return result  # todo : changer le retour
+    kernel_types = ['linear']
+    kernel_params = [0]
+    result_dir = "results"
+    result_file = os.path.join(result_dir, "svm_fr", "result_main_svm_fr.mat")
+    io.savemat(result_file, {'result': result, 'C':C, 'kernel_types':kernel_types, 'kernel_params':kernel_params})
 
 
 def main_svm_fr(data, C, kernel_types, kernel_params):

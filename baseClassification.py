@@ -7,8 +7,18 @@ import scipy.io as io
 import numpy as np
 import scipy as sp
 from scipy.sparse import csc_matrix
+import datetime
 import sklearn.svm.libsvm as ls
 import sklearn.svm as svm
+
+
+class Result:
+    def __init__(self):
+        self.ap_sigmoid = 0
+        self.acc_sigmoid = 0
+        self.ap_no_sigmoid = 0
+        self.acc_no_sigmoid = 0
+
 
 def run_svm_fr(data):
     print("***---***---***   svm_fr   ***---***---***")
@@ -35,6 +45,8 @@ def main_svm_fr(data, C, kernel_types, kernel_params):
         os.mkdir(results_directory_name)
     if not (os.path.exists(os.path.join(results_directory_name, 'svm_fr'))):
         os.mkdir(os.path.join(results_directory_name, 'svm_fr'))
+    ut.log_print(result_file, '<==========  BEGIN @ '+datetime.datetime.now().strftime("%I:%M%p on %B %d, %Y")+'C = '+
+                 str(C)+' ============>\n')
     # ici: on commence à la ligne 10 du fichier matlab
     for s in range(len(data.Xsource)):
         # création de répertoires results/svm_fr/decision_values/U00, U01, U02..
@@ -77,9 +89,6 @@ def main_svm_fr(data, C, kernel_types, kernel_params):
                                                       #K[train_index][:, train_index]), axis=1))
                         Xmatrix = np.asarray(K[train_index][:, train_index])
                         classifier = svm.SVC(C=C, kernel='precomputed')
-                        #print("Xshape:", Xmatrix.shape)
-                        #print(Xmatrix)
-                        #print("Yshape:", Ymatrix.shape)
                         classifier.fit(Xmatrix, Ymatrix)
                         #Ypredictmatrix = np.ascontiguousarray(np.concatenate((np.asarray([range(len(tar_index))]).transpose(), K[tar_index][:, train_index]), axis=1))
                         Ypredictmatrix = np.asarray(K[tar_index][:, train_index])
@@ -90,12 +99,10 @@ def main_svm_fr(data, C, kernel_types, kernel_params):
                         io.savemat(dv_file, {'decision_values': decision_values})
 
     # starting at line 54 matlab code
+    results = []
     for r in range(data.nRound):
-        print("this is ", r)
         tar_train_index = data.tar_train_index[r]
         tar_test_index = np.array(data.tar_test_index[r]-1).flatten()
-        print("hey tartestindex")
-        print(tar_test_index)
         all_test_dv = []
         for s in range(len(data.Xsource)):
             dv_dir = os.path.join(results_directory_name, 'svm_fr', 'decision_values', data.domain_names[s])
@@ -108,10 +115,47 @@ def main_svm_fr(data, C, kernel_types, kernel_params):
                     decision_values = io.loadmat(dv_file)['decision_values']
                     ap_datayt = np.squeeze(np.asarray(data.ytarget))
                     ap_dv = np.squeeze(decision_values)
-                    print("ap_datayt -- tti --", ap_datayt[tar_test_index])
-                    print("ap_dv -- tti --", ap_dv[tar_test_index])
                     ap = ut.calc_ap(ap_datayt[tar_test_index], ap_dv[tar_test_index])
-                    
+                    # acc = np.average(ap_datayt[tar_test_index] == np.sign(ap_dv[tar_test_index]))
+                    aux_acc = (ap_datayt[tar_test_index] == np.sign(ap_dv[tar_test_index]))
+                    aux_sum = 0
+                    for elem in aux_acc:
+                        aux_sum += elem
+                    acc = aux_sum/len(aux_acc)
+                    #todo: acc above seems to be mostly okay, but is sometimes a bit lower than matlab equivalent...
+                    ut.log_print(result_file, str(ap)+'\t'+str(acc)+' @ round='+str(r)+', C='+str(C)
+                                 +', kernel='+str(kernel_type)+', kernel_param='+str(kernel_param)
+                                 +', '+str(data.domain_names[s])+'\n')
+                    all_test_dv.append(decision_values)
+        all_test_dv = np.array(all_test_dv)
+        dv = np.average(1/(1+np.exp(-1*all_test_dv)), 0)
+        # line 76 of matlab code
+        ap_datayt = np.squeeze(np.asarray(data.ytarget))
+        ap_dv = np.squeeze(dv)
+        ap = ut.calc_ap(ap_datayt[tar_test_index], ap_dv[tar_test_index])
+        aux_acc = (ap_datayt[tar_test_index] == np.sign(ap_dv[tar_test_index]))
+        aux_sum = 0
+        for elem in aux_acc:
+            aux_sum += elem
+        acc = aux_sum/len(aux_acc)
+        result = Result()
+        result.ap_sigmoid = ap
+        result.acc_sigmoid = acc
+        ut.log_print(result_file, 'SIGMOID '+str(ap)+'\t'+str(acc)+' @ round='+str(r)+', C='+str(C)+'\n')
+        dv = np.average(all_test_dv, 0)
+        ap_datayt = np.squeeze(np.asarray(data.ytarget))
+        ap_dv = np.squeeze(dv)
+        ap = ut.calc_ap(ap_datayt[tar_test_index], ap_dv[tar_test_index])
+        aux_acc = (ap_datayt[tar_test_index] == np.sign(ap_dv[tar_test_index]))
+        aux_sum = 0
+        for elem in aux_acc:
+            aux_sum += elem
+        acc = aux_sum/len(aux_acc)
+        result.ap_no_sigmoid = ap
+        result.acc_no_sigmoid = acc
+        results.append(result)
+        ut.log_print(result_file, 'NO SIGMOID '+str(ap)+'\t'+str(acc)+' @ round='+str(r)+', C='+str(C)+'\n')
 
-
-    return "a string of words that marks the end of this function"  # todo: changer le retour
+    ut.log_print(result_file, '<==========  END: '+datetime.datetime.now().strftime("%I:%M%p on %B %d, %Y")
+                 + ', C = ' + str(C) + ' ============>\n')
+    return results

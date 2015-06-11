@@ -6,7 +6,7 @@ import os
 
 NUM_DATA_SETS = 4
 NUM_TAR_IND_FILES = 10
-N_ROUND = 1
+N_ROUND = 10
 
 
 class Data:
@@ -73,10 +73,14 @@ def calc_ap(gt, desc):
         ap = 0
     else:
         npos_array = np.array(range(npos))+1
-        print("len npos:", len(npos_array))
         pos_ind_array = np.array(pos_ind).flatten() + 1
-        print("len pos ind: ", len(pos_ind_array))
         divarray = (npos_array/pos_ind_array)
         ap = np.average(divarray)
     return [ap]
+
+
+def log_print(log_file, varargin):
+    with open(log_file, "a") as file:
+        file.write(varargin)
+
 

@@ -63,13 +63,14 @@ def calc_ap(gt, desc):
     assert len(gt) == len(desc)
     gt = np.asarray(gt).flatten()
     desc = np.asarray(desc).flatten()
+    #todo: is mult by -1 necessary to reintegrate?
     desc *= -1
     ind = desc.argsort()
     dv = desc
     dv.sort()
     dv = (-1*dv)
     gt = gt[ind]
-    pos_ind = np.where(gt > 0) # tuple where first element is the array containing the elements where gt[i] > 0
+    pos_ind = np.where(gt > 0)  # tuple where first element is the array containing the elements where gt[i] > 0
     npos = len(pos_ind[0])
     if npos == 0:
         ap = 0
@@ -87,6 +88,7 @@ def log_print(log_file, varargin):
 
 
 def save_mmd_fr(data):
+    #MMD: "Maximum Mean Discrepancy"
     result_dir = 'results'
     kernel_types = ['linear', 'poly']
     kernel_params = [[0], []]
@@ -105,31 +107,35 @@ def save_mmd_fr(data):
             os.mkdir(os.path.join(result_dir, 'mmd_values_fr'))
         if not (os.path.exists(mmd_dir)):
             os.mkdir(mmd_dir)
-        Xsource = data.Xsource[s]
-        ysource = data.ysource[s]
         Xsparse = sp.sparse.vstack([data.Xtarget[0], csc_matrix(Xsource)])
-        S = Xsparse*Xsparse.transpose()
+        S = Xsparse.dot(Xsparse.transpose())
         S = S.todense()
-        y = np.concatenate((data.ytarget[0], ysource))
+        #y = np.concatenate((data.ytarget[0], ysource))
+        #src_index = np.array([i + data.Xtarget[0].shape[0] for i in range(Xsource.shape[0])]).transpose()
         src_index = [i + data.Xtarget[0].shape[0] for i in range(Xsource.shape[0])]
-        tar_index = [i for i in range(data.Xtarget[0].shape[0])]
-        ss = np.zeros((len(src_index)+len(tar_index), 1))
-        ss[src_index] = 1/len(src_index)*100
-        ss[tar_index] = -1/len(tar_index)*100
+        #tar_index = np.array([i for i in range(data.Xtarget[0].shape[0])]).transpose()
+        tar_index = np.array([i for i in range(data.Xtarget[0].shape[0])]).transpose()
+        #ss = np.zeros((len(src_index)+len(tar_index), 1))
+        ss = np.zeros(len(src_index)+len(tar_index))
+
+        ss[src_index] = 1/len(src_index)
+        ss[tar_index] = -1/len(tar_index)
 
         for kt in range(len(kernel_types)):
             kernel_type = kernel_types[kt]
             for kp in range(len(kernel_params[kt])):
                 kernel_param = kernel_params[kt][kp]
                 K = calc_kernel_S(kernel_type, kernel_param, S)
-                K[src_index][:, src_index] *= 2
-                K[tar_index][:, tar_index] *= 2
-
+                K[np.ix_(src_index, src_index)] = np.multiply(K[src_index][:, src_index], 2)
+                K[np.ix_(tar_index, tar_index)] = np.multiply(K[tar_index][:, tar_index], 2)
                 mmd_file = os.path.join(mmd_dir, 'mmd_'+str(kernel_type)+'_'+str(kernel_param)+'.mat')
                 if os.path.exists(mmd_file):
                     mmd_value = io.loadmat(mmd_file)['mmd_value']
                 else:
-                    mmd_value = (ss.transpose()*K*ss)
+                    #mmd_value = (ss.transpose().flatten().dot(K)).dot(ss.flatten())
+                    K = np.squeeze(K)
+                    mmdvalaux = ss.dot(K)
+                    mmd_value = mmdvalaux.dot(ss.transpose())
                     io.savemat(mmd_file, {'mmd_value': mmd_value})
 
 
